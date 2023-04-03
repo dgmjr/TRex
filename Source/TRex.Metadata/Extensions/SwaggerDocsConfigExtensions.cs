@@ -1,6 +1,10 @@
-﻿using QuickLearn.ApiApps.Metadata;
-using Swashbuckle.Application;
-using System;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Attributes;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Services;
+using QuickLearn.ApiApps.Metadata;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace TRex.Metadata
 {
@@ -15,7 +19,7 @@ namespace TRex.Metadata
         /// <param name="config">SwaggerDocsConfig instance that will be used
         /// to configure Swashbuckle</param>
         [CLSCompliant(false)]
-        public static void ReleaseTheTRex(this SwaggerDocsConfig config)
+        public static void ReleaseTheTRex(this SwaggerGenOptions config)
         {
             if (config == null) return;
 

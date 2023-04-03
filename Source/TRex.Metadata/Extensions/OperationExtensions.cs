@@ -1,20 +1,20 @@
-﻿using Swashbuckle.Swagger;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using TRex.Metadata;
 using TRex.Metadata.Models;
+
 
 namespace QuickLearn.ApiApps.Metadata.Extensions
 {
     internal static class OperationExtensions
     {
-
-        public static void SetTrigger(this Operation operation, SchemaRegistry schemaRegistry, TriggerAttribute triggerDescription)
+        public static void SetTrigger(this OpenApiOperation operation, ISchemaGenerator schemaRegistry, TriggerAttribute triggerDescription)
         {
-            operation.EnsureVendorExtensions();
-
             string batchMode = null;
+
 
             switch (triggerDescription.Pattern)
             {
@@ -32,39 +32,45 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
                     break;
             }
 
-            if (!operation.vendorExtensions.ContainsKey(Constants.X_MS_TRIGGER))
+            if (!operation.CustomAttributes.Contains(new KeyValuePair<string, object>(Constants.X_MS_TRIGGER, batchMode.ToString().ToLowerInvariant())))
             {
-                operation.vendorExtensions.Add(Constants.X_MS_TRIGGER,
-                    batchMode.ToString().ToLowerInvariant());
+                operation.CustomAttributes.Add(new KeyValuePair<string, object>(Constants.X_MS_TRIGGER,
+                    batchMode.ToString().ToLowerInvariant()));
             }
 
             if (triggerDescription.Pattern == TriggerType.Subscription) return;
 
-            var dataResponse = new Response()
+            var dataResponse = new OpenApiResponse()
             {
-                description = triggerDescription.DataFriendlyName,
-                schema = null != triggerDescription.DataType
-                            ? schemaRegistry.GetOrRegister(triggerDescription.DataType)
+                Description = triggerDescription.DataFriendlyName,
+                Content = new Dictionary<string, OpenApiMediaType>
+            {
+                { "application/json",
+                    new OpenApiMediaType()
+                    {
+                        Schema = null != triggerDescription.DataType
+                            ? schemaRegistry.GenerateSchema(triggerDescription.DataType, null)
                             : null
+                    }
+                }
+            }
             };
 
-            var acceptedResponse = new Response()
+            var acceptedResponse = new OpenApiResponse()
             {
-                description = Constants.ACCEPTED
+                Description = Constants.ACCEPTED
             };
 
-            operation.responses[Constants.HAPPY_POLL_WITH_DATA_RESPONSE_CODE] = dataResponse;
-            operation.responses[Constants.HAPPY_POLL_NO_DATA_RESPONSE_CODE] = acceptedResponse;
+            operation.Responses.Add(Constants.HAPPY_POLL_WITH_DATA_RESPONSE_CODE, dataResponse);
+            operation.Responses.Add(Constants.HAPPY_POLL_NO_DATA_RESPONSE_CODE, acceptedResponse);
 
         }
 
-        public static void SetCallbackType(this Operation operation, SchemaRegistry schemaRegistry, Type callbackType, string description)
+        public static void SetCallbackType(this OpenApiOperation operation, ISchemaGenerator schemaRegistry, System.Type callbackType, string description)
         {
-            operation.EnsureVendorExtensions();
-
-            if (!operation.vendorExtensions.ContainsKey(Constants.X_MS_NOTIFICATION_CONTENT))
+            if (!callbackType.GetCustomAttributes(true).Contains(new KeyValuePair<string, object>(Constants.X_MS_NOTIFICATION_CONTENT, null)))
             {
-                var schemaInfo = schemaRegistry.GetOrRegister(callbackType);
+                var schemaInfo = schemaRegistry.GenerateSchema(callbackType, null);
 
                 var notificationData = new NotificationContentModel()
                 {
@@ -72,48 +78,40 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
                     Schema = new SchemaModel(schemaInfo)
                 };
 
-                operation.vendorExtensions.Add(Constants.X_MS_NOTIFICATION_CONTENT,
-                    notificationData);
+                operation.CustomAttributes.Add(new KeyValuePair<string, object>(Constants.X_MS_NOTIFICATION_CONTENT,
+                    notificationData));
             }
-
         }
 
-        public static void EnsureVendorExtensions(this Operation operation)
-        {
-            if (operation.vendorExtensions == null) operation.vendorExtensions = new Dictionary<string, object>();
-        }
-
-        public static void SetVisibility(this Operation operation, VisibilityType visibility)
+        public static void SetVisibility(this OpenApiOperation operation, VisibilityType visibility)
         {
             if (visibility == VisibilityType.Default) return;
 
-            operation.EnsureVendorExtensions();
-            
-            if (!operation.vendorExtensions.ContainsKey(Constants.X_MS_VISIBILITY))
-                operation.vendorExtensions.Add(Constants.X_MS_VISIBILITY,
-                    visibility.ToString().ToLowerInvariant());
+            if (!operation.CustomAttributes.Contains(new KeyValuePair<string, object>(Constants.X_MS_VISIBILITY, visibility.ToString().ToLowerInvariant())))
+                operation.CustomAttributes.Add(new KeyValuePair<string, object>(Constants.X_MS_VISIBILITY,
+                    visibility));
+
         }
 
-        public static void SetFriendlyNameAndDescription(this Operation operation, string friendlyName, string description)
+        public static void SetFriendlyNameAndDescription(this OpenApiOperation operation, string friendlyName, string description)
         {
             if (!string.IsNullOrWhiteSpace(description))
-                operation.description = description;
+                operation.Summary = description;
 
             if (!string.IsNullOrWhiteSpace(friendlyName))
             {
-                operation.summary = friendlyName;
-                operation.operationId = GetOperationId(friendlyName);
+                operation.Summary = friendlyName;
+                operation.OperationId = GetOperationId(friendlyName);
             }
         }
 
         public static string GetOperationId(string friendlyName)
         {
-           
-           if (!friendlyName.Contains(" ")) return friendlyName;
+            if (!friendlyName.Contains(" ")) return friendlyName;
 
-           return CultureInfo.CurrentCulture.TextInfo
-                                            .ToTitleCase(friendlyName)
-                                            .Replace(" ", string.Empty);
+            return CultureInfo.CurrentCulture.TextInfo
+                .ToTitleCase(friendlyName)
+                .Replace(" ", string.Empty);
         }
     }
 }

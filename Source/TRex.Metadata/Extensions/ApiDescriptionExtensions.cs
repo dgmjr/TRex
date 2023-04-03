@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Web.Http.Controllers;
-using System.Web.Http.Description;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using TRex.Metadata;
 
 namespace QuickLearn.ApiApps.Metadata.Extensions
@@ -13,16 +13,15 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
         {
             string operationId = actionName;
 
-            var matchingMethod = (from method in apiDescription.ActionDescriptor
-                                                    .ControllerDescriptor.ControllerType
-                                                    .GetMethods()
-                                  let parameters = method.GetParameters()
+            var matchingMethod = (from method in apiDescription.ActionDescriptor.EndpointMetadata.SelectMany(m => m.GetType().GetMethods())
+                                                            .Where(m => m.GetCustomAttributes(typeof(MetadataAttribute), true).Any())
+                                            let parameters = method.GetParameters()
                                                             .Select(p => p.Name)
                                                             .OrderBy(p => p)
                                                             .ToArray()
-                                  where method.Name == actionName
-                                        && parameters.SequenceEqual(parameterNames)
-                                  select method).FirstOrDefault();
+                                            where method.Name == actionName
+                                                    && parameters.SequenceEqual(parameterNames)
+                                            select method).FirstOrDefault();
 
             if (matchingMethod != null)
             {
@@ -39,21 +38,21 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
             return operationId;
         }
 
-        internal static T GetFirstOrDefaultCustomAttribute<T>(this HttpActionDescriptor actionDescriptor) where T : Attribute
-        {
-            if (actionDescriptor == null) return null;
+        // internal static T GetFirstOrDefaultCustomAttribute<T>(this ActionDescriptor actionDescriptor) where T : Attribute
+        // {
+        //     if (actionDescriptor == null) return null;
 
-            var attributeInfoResult = actionDescriptor.GetCustomAttributes<T>();
+        //     var attributeInfoResult = actionDescriptor.GetFirstOrDefaultCustomAttribute<T>();
 
-            return attributeInfoResult == null ? null : attributeInfoResult.FirstOrDefault();
-        }
+        //     return attributeInfoResult == null ? null : attributeInfoResult.FirstOrDefault();
+        // }
 
-        internal static T GetFirstOrDefaultCustomAttribute<T>(this HttpParameterDescriptor parameterDescriptor) where T : Attribute
-        {
-            if (parameterDescriptor == null) return null;
+        // internal static T GetFirstOrDefaultCustomAttribute<T>(this HttpParameterDescriptor parameterDescriptor) where T : Attribute
+        // {
+        //     if (parameterDescriptor == null) return null;
 
-            var attributeInfoResult = parameterDescriptor.GetCustomAttributes<T>();
-            return attributeInfoResult == null ? null : attributeInfoResult.FirstOrDefault();
-        }
+        //     var attributeInfoResult = parameterDescriptor.GetCustomAttributes<T>();
+        //     return attributeInfoResult == null ? null : attributeInfoResult.FirstOrDefault();
+        // }
     }
 }

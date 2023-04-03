@@ -1,10 +1,16 @@
-﻿using QuickLearn.ApiApps.Metadata.Extensions;
-using Swashbuckle.Swagger;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Microsoft.OpenApi.Extensions;
+using Microsoft.OpenApi.Interfaces;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
+using QuickLearn.ApiApps.Metadata.Extensions;
+using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using TRex.Metadata;
 using TRex.Metadata.Models;
 
@@ -18,7 +24,7 @@ namespace QuickLearn.ApiApps.Metadata
 
         }
 
-        public void Apply(Schema schema, SchemaRegistry schemaRegistry, Type type)
+        public void Apply(OpenApiSchema schema,  SchemaRepository schemaRegistry, Type type)
         {
             if (schema == null || type == null)
             {
@@ -27,14 +33,14 @@ namespace QuickLearn.ApiApps.Metadata
 
             applySchemaLookupForDynamicModels(schema, schemaRegistry, type);
 
-            if (schema.properties == null)
+            if (schema.Properties == null)
             {
                 return;
             }
 
-            foreach (var propertyName in schema.properties.Keys)
+            foreach (var propertyName in schema.Properties.Keys)
             {
-                var schemaProperty = schema.properties[propertyName];
+                var schemaProperty = schema.Properties[propertyName];
                 var propertyInfo = type.GetRuntimeProperties().Where(p => p.GetSerializedPropertyName() == propertyName).FirstOrDefault();
 
                 applyValueLookupForDynamicProperties(schemaProperty, propertyInfo);
@@ -43,7 +49,7 @@ namespace QuickLearn.ApiApps.Metadata
             }
         }
 
-        private static void applyValueLookupForDynamicProperties(Schema schemaProperty, PropertyInfo propertyInfo)
+        private static void applyValueLookupForDynamicProperties(OpenApiSchema schemaProperty, PropertyInfo propertyInfo)
         {
 
             // Applies dynamic value lookup for the current property (if DynamicValueLookupAttribute is present)
@@ -67,7 +73,7 @@ namespace QuickLearn.ApiApps.Metadata
             schemaProperty.SetValueLookup(valueLookup);
         }
 
-        private static void applySchemaLookupForDynamicModels(Schema schema, SchemaRegistry schemaRegistry, Type type)
+        private static void applySchemaLookupForDynamicModels(OpenApiSchema schema, SchemaRepository schemaRegistry, Type type)
         {
             if (schema == null || type == null) return;
 
@@ -87,77 +93,84 @@ namespace QuickLearn.ApiApps.Metadata
             // get out of this method
             if (type.BaseType == typeof(object))
             {
-                schema.SetSchemaLookup(schemaLookupSettings);
+                // I don't know wtf this is supposed to do so I'm'a just comment it out for now
+                // todo: figure out what this is supposed to do n fix it
+                // schema.SetSchemaLookup(schemaLookupSettings);
                 return;
             }
 
             // Determine if the dynamic schema already appears in the schema registry
             // if it appears, we will reference it's definition and make sure it has the
             // vendor extension applied 
-            if (schemaRegistry.Definitions.ContainsKey(type.Name))
+            if (schemaRegistry.TryLookupByType(type, out var refSchema))
             {
-                schemaRegistry.Definitions[type.Name].SetSchemaLookup(schemaLookupSettings);
+                schemaRegistry.Schemas[type.Name] = refSchema;
+                // schemaRegistry.Definitions[type.Name].SetSchemaLookup(schemaLookupSettings);
             }
             else
             {
                 // Dynamic schema hasn't been registered yet, let's do that to make sure
                 // the schema doesn't get inlined (since the settings will be common for the type
                 // given that the attribute appears at the class-level)
-                var dynamicSchema = new Schema()
+                var dynamicSchema = new OpenApiSchema()
                 {
-                    additionalProperties = schema.additionalProperties,
-                    allOf = schema.allOf,
-                    @default = schema.@default,
-                    description = schema.description,
-                    discriminator = schema.discriminator,
-                    @enum = schema.@enum,
-                    example = schema.example,
-                    exclusiveMaximum = schema.exclusiveMaximum,
-                    exclusiveMinimum = schema.exclusiveMinimum,
-                    externalDocs = schema.externalDocs,
-                    format = schema.format,
-                    items = schema.items,
-                    maximum = schema.maximum,
-                    maxItems = schema.maxItems,
-                    maxLength = schema.maxLength,
-                    maxProperties = schema.maxProperties,
-                    minimum = schema.minimum,
-                    minItems = schema.minItems,
-                    minLength = schema.minLength,
-                    minProperties = schema.minProperties,
-                    multipleOf = schema.multipleOf,
-                    pattern = schema.pattern,
-                    properties = schema.properties,
-                    readOnly = schema.readOnly,
-                    @ref = schema.@ref,
-                    required = schema.required,
-                    title = schema.title,
-                    type = schema.type,
-                    uniqueItems = schema.uniqueItems,
-                    xml = schema.xml
+                    AdditionalProperties = schema.AdditionalProperties,
+                    AllOf = schema.AllOf,
+                    Default = schema.Default,
+                    Description = schema.Description,
+                    Discriminator = schema.Discriminator,
+                    Enum = schema.Enum,
+                    Example = schema.Example,
+                    ExclusiveMaximum = schema.ExclusiveMaximum,
+                    ExclusiveMinimum = schema.ExclusiveMinimum,
+                    ExternalDocs = schema.ExternalDocs,
+                    Format = schema.Format,
+                    Items = schema.Items,
+                    Maximum = schema.Maximum,
+                    MaxItems = schema.MaxItems,
+                    MaxLength = schema.MaxLength,
+                    MaxProperties = schema.MaxProperties,
+                    Minimum = schema.Minimum,
+                    MinItems = schema.MinItems,
+                    MinLength = schema.MinLength,
+                    MinProperties = schema.MinProperties,
+                    MultipleOf = schema.MultipleOf,
+                    Pattern = schema.Pattern,
+                    Properties = schema.Properties,
+                    ReadOnly = schema.ReadOnly,
+                    Reference = schema.Reference,
+                    Required = schema.Required,
+                    Title = schema.Title,
+                    Type = schema.Type,
+                    UniqueItems = schema.UniqueItems,
+                    Xml = schema.Xml
                 };
+
+                /**
+                  * I don't know wtf this is supposed to do so I'm'a just comment it out for now
+                // todo: figure out what this is supposed to do n fix it
 
                 dynamicSchema.SetSchemaLookup(schemaLookupSettings);
                 dynamicSchema.properties = dynamicSchema.properties ?? new Dictionary<string, Schema>();
 
                 schemaRegistry.Definitions.Add(type.Name, dynamicSchema);
-
+                 */
 
             }
 
             // Let's make sure the current schema points to the definition that is registered
             // and doesn't get inlined
-            if (string.IsNullOrWhiteSpace(schema.@ref))
+            if (string.IsNullOrWhiteSpace(schema.Reference?.ToString()))
             {
-                schema.@ref = $"#/{nameof(schemaRegistry.Definitions).ToLower(CultureInfo.InvariantCulture)}/{type.Name}";
-                schema.type = null;
-                schema.properties = null;
+                schema.Reference = new OpenApiReference { Id = type.Name, ExternalResource = null, Type = ReferenceType.Schema };
+                // schema.Type = null;
+                // schema.Properties = null;
             }
 
         }
 
 
-        private static void applyCallbackUrl(Schema schemaProperty, PropertyInfo propertyInfo)
+        private static void applyCallbackUrl(OpenApiCallback schemaProperty, PropertyInfo propertyInfo)
         {
 
             if (schemaProperty == null || propertyInfo == null) return;
@@ -166,12 +179,14 @@ namespace QuickLearn.ApiApps.Metadata
 
             if (callbackUrlAttribute != null)
             {
-                schemaProperty.SetCallbackUrl();
+                // I also don't know wtf this is supposed to do so I'm'a just comment it out for now
+                // todo: figure out what this is supposed to do n fix it
+                // schemaProperty.SetCallbackUrl();
             }
 
         }
 
-        private static void applyPropertyMetadata(Schema schemaProperty, PropertyInfo propertyInfo)
+        private static void applyPropertyMetadata(OpenApiSchems schemaProperty, PropertyInfo propertyInfo)
         {
 
             // Apply friendly names and descriptions wherever possible

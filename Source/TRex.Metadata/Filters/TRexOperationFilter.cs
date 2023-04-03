@@ -1,59 +1,59 @@
-﻿using QuickLearn.ApiApps.Metadata.Extensions;
-using Swashbuckle.Swagger;
-using System;
-using System.Linq;
-using System.Web.Http.Description;
-using TRex.Metadata;
-using TRex.Metadata.Models;
-
-namespace QuickLearn.ApiApps.Metadata
+﻿namespace QuickLearn.ApiApps.Metadata
 {
+    using System.Linq;
+    using System.Reflection;
+    using Microsoft.OpenApi.Models;
+    using QuickLearn.ApiApps.Metadata.Extensions;
+    using Swashbuckle.AspNetCore.SwaggerGen;
+    using TRex.Metadata;
+    using TRex.Metadata.Models;
+
     internal class TRexOperationFilter : IOperationFilter
     {
 
         public TRexOperationFilter() { }
 
-        public void Apply(Operation operation, SchemaRegistry schemaRegistry, ApiDescription apiDescription)
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
 
             if (operation == null) return;
-            
+
             // Handle Metadata attribute
-            applyOperationMetadataAndVisibility(operation, apiDescription);
+            applyOperationMetadataAndVisibility(operation, context);
 
             // Handle DynamicValueLookup attribute
-            applyValueLookupForDynamicParameters(operation, apiDescription);
-            
+            applyValueLookupForDynamicParameters(operation, context);
+
             // Handle Trigger attribute
-            applyTriggerBatchModeAndResponse(operation, schemaRegistry, apiDescription);
+            applyTriggerBatchModeAndResponse(operation, context);
 
             // Apply default response (copy 200 level response if available as "default")
             applyDefaultResponse(operation);
 
         }
-        
-        private static void applyTriggerBatchModeAndResponse(Operation operation, SchemaRegistry schemaRegistry, ApiDescription apiDescription)
+
+        private static void applyTriggerBatchModeAndResponse(OpenApiOperation operation, OperationFilterContext context)
         {
-            var triggerInfo = apiDescription.ActionDescriptor.GetFirstOrDefaultCustomAttribute<TriggerAttribute>();
+            var triggerInfo = context.ApiDescription.ActionDescriptor.EndpointMetadata.OfType<TriggerAttribute>().FirstOrDefault();
 
             if (triggerInfo == null) return;
 
-            operation.SetTrigger(schemaRegistry, triggerInfo);
+            operation.SetTrigger(context.SchemaGenerator, triggerInfo);
         }
-      
-        private static void applyValueLookupForDynamicParameters(Operation operation, ApiDescription apiDescription)
-        {
-            if (operation == null || apiDescription == null) return;
 
-            var lookupParameters = from p in apiDescription.ParameterDescriptions
-                                   let valueLookupInfo = p.ParameterDescriptor.GetFirstOrDefaultCustomAttribute<DynamicValueLookupAttribute>()
-                                   where valueLookupInfo != null
-                                   select new
-                                   {
-                                       SwaggerParameter = operation.parameters.FirstOrDefault(param => param.name == p.Name),
-                                       Parameter = p,
-                                       ValueLookupInfo = valueLookupInfo
-                                   };
+        private static void applyValueLookupForDynamicParameters(OpenApiOperation operation, OperationFilterContext context)
+        {
+            if (operation == null || context == null) return;
+
+            var lookupParameters = from p in context.ApiDescription.ParameterDescriptions
+                                    let valueLookupInfo = p.CustomAttributes().OfType<DynamicValueLookupAttribute>().FirstOrDefault()
+                                    where valueLookupInfo != null
+                                    select new
+                                    {
+                                        SwaggerParameter = operation.Parameters.FirstOrDefault(param => param.Name == p.Name),
+                                        Parameter = p,
+                                        ValueLookupInfo = valueLookupInfo
+                                    };
 
             if (!lookupParameters.Any()) return;
 
@@ -68,20 +68,20 @@ namespace QuickLearn.ApiApps.Metadata
                 };
 
                 valueLookup.OperationId =
-                    apiDescription.ResolveOperationIdForSiblingAction(
+                    context.ApiDescription.ResolveOperationIdForSiblingAction(
                         param.ValueLookupInfo.LookupOperation,
                         valueLookup.Parameters.Properties().Select(p => p.Name).ToArray());
-                
+
                 param.SwaggerParameter.SetValueLookup(valueLookup);
             }
         }
-        
+
         /// <summary>
         /// Applies the friendly names, descriptions, and visibility settings to the operation
         /// </summary>
         /// <param name="operation">Exposed operation metadata</param>
-        /// <param name="apiDescription">Implementation metadata</param>
-        private static void applyOperationMetadataAndVisibility(Operation operation, ApiDescription apiDescription)
+        /// <param name="context">Implementation metadata</param>
+        private static void applyOperationMetadataAndVisibility(OpenApiOperation operation, OperationFilterContext context)
         {
 
             // Apply friendly names and descriptions where possible
@@ -89,8 +89,8 @@ namespace QuickLearn.ApiApps.Metadata
             //      operation.description - description (applies to methods)
             //      "x-ms-summary" - friendly name (applies to parameters and their properties)
             //      operation.parameters[x].description - description (applies to parameters)
-            
-            var operationMetadata = apiDescription.ActionDescriptor.GetFirstOrDefaultCustomAttribute<MetadataAttribute>();
+
+            var operationMetadata = context.ApiDescription.ActionDescriptor.EndpointMetadata.OfType<MetadataAttribute>().FirstOrDefault();
 
             if (operationMetadata != null)
             {
@@ -98,10 +98,10 @@ namespace QuickLearn.ApiApps.Metadata
                 operation.SetVisibility(operationMetadata.Visibility);
             }
 
-            if (operation.parameters == null) return;
+            if (operation.Parameters == null) return;
 
             // Ensure that we get the parameters of the operation all annotated appropriately as well
-            applyOperationParameterMetadataAndVisibility(operation, apiDescription);
+            applyOperationParameterMetadataAndVisibility(operation, context);
 
         }
 
@@ -109,18 +109,18 @@ namespace QuickLearn.ApiApps.Metadata
         /// Applies the friendly names, descriptions, and visibility settings to all operation parameters
         /// </summary>
         /// <param name="operation">Exposed operation metadata</param>
-        /// <param name="apiDescription">Implementation metadata</param>
-        private static void applyOperationParameterMetadataAndVisibility(Operation operation, ApiDescription apiDescription)
+        /// <param name="context">Implementation metadata</param>
+        private static void applyOperationParameterMetadataAndVisibility(OpenApiOperation operation, OperationFilterContext context)
         {
-            var operationParameters = apiDescription.ActionDescriptor.GetParameters();
+            var operationParameters = context.ApiDescription.ActionDescriptor.Parameters;
 
             if (operationParameters != null)
             {
-                foreach (var parameter in apiDescription.ActionDescriptor.GetParameters())
+                foreach (var parameter in context.ApiDescription.ActionDescriptor.Parameters)
                 {
-                    var parameterMetadata = parameter.GetFirstOrDefaultCustomAttribute<MetadataAttribute>();
+                    var parameterMetadata = parameter.ParameterType.GetCustomAttributes<MetadataAttribute>().FirstOrDefault();
 
-                    var operationParam = operation.parameters.FirstOrDefault(p => p.name == parameter.ParameterName);
+                    var operationParam = operation.Parameters.FirstOrDefault(p => p.Name == parameter.Name);
 
                     if (operationParam != null && parameterMetadata != null)
                     {
@@ -135,23 +135,21 @@ namespace QuickLearn.ApiApps.Metadata
         /// Ensures that each operation has a "default" response with a 200-level response code
         /// </summary>
         /// <param name="operation">Metadata for the operation</param>
-        private static void applyDefaultResponse(Operation operation)
+        private static void applyDefaultResponse(OpenApiOperation operation)
         {
-            if (!operation.responses.ContainsKey(Constants.DEFAULT_RESPONSE_KEY))
+            if (!operation.Responses.ContainsKey(Constants.DEFAULT_RESPONSE_KEY))
             {
-                var successCode = (from statusCode in operation.responses.Keys
-                                   where statusCode.StartsWith(Constants.HAPPY_RESPONSE_CODE_LEVEL_START,
-                                    StringComparison.OrdinalIgnoreCase)
-                                   select statusCode).FirstOrDefault();
+                var successCode = (from statusCode in operation.Responses.Keys
+                                            where statusCode.StartsWith(Constants.HAPPY_RESPONSE_CODE_LEVEL_START,
+                                                System.StringComparison.OrdinalIgnoreCase)
+                                            select statusCode).FirstOrDefault();
 
                 if (successCode != null)
                 {
-                    operation.responses.Add(Constants.DEFAULT_RESPONSE_KEY, operation.responses[successCode]);
+                    operation.Responses.Add(Constants.DEFAULT_RESPONSE_KEY, operation.Responses[successCode]);
                 }
             }
         }
 
     }
-
-
 }

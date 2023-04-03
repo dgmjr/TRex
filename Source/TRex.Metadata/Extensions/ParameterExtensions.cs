@@ -1,56 +1,57 @@
-﻿using Swashbuckle.Swagger;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.OpenApi.Interfaces;
+using Microsoft.OpenApi.Models;
+
+using TRex;
 using TRex.Metadata;
-using TRex.Metadata.Models;
 
 namespace QuickLearn.ApiApps.Metadata.Extensions
 {
-    internal static class ParameterExtensions
+    public static class ParameterExtensions
     {
-        public static void EnsureVendorExtensions(this Parameter parameter)
+        public static void EnsureExtensions(this OpenApiParameter item)
         {
-            if (parameter.vendorExtensions == null) parameter.vendorExtensions = new Dictionary<string, object>();
+            if (item.Extensions == null) item.Extensions = new Dictionary<string, IOpenApiExtension>();
         }
 
-        public static void SetVisibility(this Parameter parameter, VisibilityType visibility)
+        public static void SetVisibility(this OpenApiParameter parameter, VisibilityType visibility)
         {
             if (visibility == VisibilityType.Default) return;
 
-            parameter.EnsureVendorExtensions();
+            parameter.EnsureExtensions();
 
-            if (!parameter.vendorExtensions.ContainsKey(Constants.X_MS_VISIBILITY))
+            if (!parameter.Extensions.ContainsKey(Constants.X_MS_VISIBILITY))
             {
-                parameter.vendorExtensions.Add(Constants.X_MS_VISIBILITY,
-                    visibility.ToString().ToLowerInvariant());
+                parameter.Extensions.Add(Constants.X_MS_VISIBILITY,
+                    new DynamicOpenApiExtension(Constants.X_MS_VISIBILITY, visibility.ToString().ToLowerInvariant()));
             }
         }
 
-        public static void SetValueLookup(this Parameter parameter, DynamicValuesModel dynamicValuesSettings)
+        public static void SetValueLookup(this OpenApiParameter parameter, object dynamicValuesSettings)
         {
 
-            parameter.EnsureVendorExtensions();
+            parameter.EnsureExtensions();
 
-            if (!parameter.vendorExtensions.ContainsKey(Constants.X_MS_DYNAMIC_VALUES))
+            if (!parameter.Extensions.ContainsKey(Constants.X_MS_DYNAMIC_VALUES))
             {
-                parameter.vendorExtensions.Add(Constants.X_MS_DYNAMIC_VALUES,
-                    dynamicValuesSettings);
+                parameter.Extensions.Add(Constants.X_MS_DYNAMIC_VALUES,
+                    new DynamicOpenApiExtension(Constants.X_MS_DYNAMIC_VALUES, dynamicValuesSetting));
             }
-
         }
 
 
-        public static void SetFriendlyNameAndDescription(this Parameter parameter, string friendlyName, string description)
+        public static void SetFriendlyNameAndDescription(this OpenApiParameter parameter, string friendlyName, string description)
         {
             if (!string.IsNullOrWhiteSpace(description))
-                parameter.description = description;
+                parameter.Description = description;
 
             if (string.IsNullOrWhiteSpace(friendlyName)) return;
 
-            parameter.EnsureVendorExtensions();
+            parameter.EnsureExtensions();
 
-            if (!parameter.vendorExtensions.ContainsKey(Constants.X_MS_SUMMARY))
+            if (!parameter.Extensions.ContainsKey(Constants.X_MS_SUMMARY))
             {
-                parameter.vendorExtensions.Add(Constants.X_MS_SUMMARY, friendlyName);
+                parameter.Extensions.Add(Constants.X_MS_SUMMARY, new DynamicOpenApiExtension(Constants.X_MS_SUMMARY, friendlyName));
             }
         }
 
