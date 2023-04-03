@@ -1,15 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿/* 
+ * TRexSchemaFilter.cs
+ * 
+ *   Created: Sometime in 2016
+ *   Modified: 2023-04-03-09:09:17
+ * 
+ *   Author: Nick Hauensteiin <Nicholas.Hauenstein@microsoft.com>
+ *   Contributors: David G. Moore, Jr. david@dgmjr.io
+ *                 CodeGPT (no really, it wrote a lot of this)
+ *   
+ *   Copyright © 2016 - 2023 Nick Hauenstein & David G. Moore, Jr., All Rights Reserved
+ *      License: MIT (https://opensource.org/licenses/MIT)
+ */
+
+using System;
 using System.Linq;
 using System.Reflection;
-using Microsoft.OpenApi.Extensions;
-using Microsoft.OpenApi.Interfaces;
-using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Models;
 using QuickLearn.ApiApps.Metadata.Extensions;
-using Swashbuckle.AspNetCore.Swagger;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using TRex.Metadata;
 using TRex.Metadata.Models;
@@ -94,7 +101,7 @@ namespace QuickLearn.ApiApps.Metadata
             if (type.BaseType == typeof(object))
             {
                 // I don't know wtf this is supposed to do so I'm'a just comment it out for now
-                // todo: figure out what this is supposed to do n fix it
+                // todo: #16 figure out what this is supposed to do n fix it
                 // schema.SetSchemaLookup(schemaLookupSettings);
                 return;
             }
@@ -148,7 +155,7 @@ namespace QuickLearn.ApiApps.Metadata
 
                 /**
                   * I don't know wtf this is supposed to do so I'm'a just comment it out for now
-                // todo: figure out what this is supposed to do n fix it
+                /// todo: Figure out what this is supposed to do & fix it
 
                 dynamicSchema.SetSchemaLookup(schemaLookupSettings);
                 dynamicSchema.properties = dynamicSchema.properties ?? new Dictionary<string, Schema>();
@@ -180,7 +187,7 @@ namespace QuickLearn.ApiApps.Metadata
             if (callbackUrlAttribute != null)
             {
                 // I also don't know wtf this is supposed to do so I'm'a just comment it out for now
-                // todo: figure out what this is supposed to do n fix it
+                // todo: Figure out what this is supposed to do & fix it
                 // schemaProperty.SetCallbackUrl();
             }
 

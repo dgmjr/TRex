@@ -1,4 +1,18 @@
-﻿using System.Collections.Generic;
+﻿/* 
+ * OperationExtensions.cs
+ * 
+ *   Created: Sometime in 2016
+ *   Modified: 2023-04-03-09:11:54
+ * 
+ *   Author: Nick Hauensteiin <Nicholas.Hauenstein@microsoft.com>
+ *   Contributors: David G. Moore, Jr. david@dgmjr.io
+ *                 CodeGPT (no really, it wrote a lot of this)
+ *   
+ *   Copyright © 2016 - 2023 Nick Hauenstein & David G. Moore, Jr., All Rights Reserved
+ *      License: MIT (https://opensource.org/licenses/MIT)
+ */ 
+
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.OpenApi.Models;

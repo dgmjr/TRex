@@ -1,4 +1,18 @@
-﻿namespace QuickLearn.ApiApps.Metadata
+﻿/* 
+ * TRexOperationFilter.cs
+ * 
+ *   Created: Sometime in 2016
+ *   Modified: 2023-04-03-09:12:44
+ * 
+ *   Author: Nick Hauensteiin <Nicholas.Hauenstein@microsoft.com>
+ *   Contributors: David G. Moore, Jr. david@dgmjr.io
+ *                 CodeGPT (no really, it wrote a lot of this)
+ *   
+ *   Copyright © 2016 - 2023 Nick Hauenstein & David G. Moore, Jr., All Rights Reserved
+ *      License: MIT (https://opensource.org/licenses/MIT)
+ */ 
+
+namespace QuickLearn.ApiApps.Metadata
 {
     using System.Linq;
     using System.Reflection;

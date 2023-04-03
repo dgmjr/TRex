@@ -1,0 +1,140 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"workbench.colorCustomizations": {
+			"activityBar.background": "#2E1C74",
+			"titleBar.activeBackground": "#4028A3",
+			"titleBar.activeForeground": "#FBFBFE"
+		},
+		"githubPullRequests.remotes": [
+			"origin"
+		],
+		{
+        "azureAutomation.directory.basePath": "Users/david/GitHub",
+        "psi-header.changes-tracking": {
+            "autoHeader": "manualSave",
+            "enforceHeader": false,
+            "excludeGlob": [
+                "**/*snippet",
+                "front-matter.yml"
+            ],
+            "include": [
+                "msbuild",
+                "csharp",
+                "xml",
+                "yaml",
+                "markdown",
+                "shellscript",
+                "typescript"
+            ],
+            "isActive": true,
+            "modDate": "Modified: <<dateformat('YYYY-MM-DD-hh:mm:ss')>>",
+            "modDateFormat": "date-time",
+            "updateLicenseVariables": true
+        },
+        "psi-header.config": {
+            "author": "Nick Hauensteiin",
+            "authorEmail": "Nicholas.Hauenstein@microsoft.com",
+			"initials": "nh",
+            "blankLinesAfter": 1,
+            "copyrightHolder": "Nick Hauenstein & David G. Moore, Jr.",
+            "creationDateZero": "now",
+            "forceToTop": true,
+            "license": "MIT",
+            "modDateFormat": "date-time",
+            "spacesBetweenYears": true,
+            "updateLicenseVariables": true
+        },
+        "psi-header.lang-config": [
+            {
+                "begin": "<!--",
+                "end": "-->",
+                "language": "xml"
+            },
+            {
+                "begin": "---",
+                "end": "---",
+                "language": "markdown",
+                "prefix": ""
+            },
+            {
+                "begin": "/* ",
+                "end": " */ ",
+                "language": "csharp",
+                "prefix": " * "
+            },
+            {
+                "language": "typescript",
+                "mapTo": "csharp"
+            },
+            {
+                "language": "yaml",
+                "mapTo": "shellscript"
+            },
+            {
+                "begin": "# ",
+                "end": "# ",
+                "language": "shellscript",
+                "prefix": "# "
+            }
+        ],
+        "psi-header.templates": [
+            {
+                "language": "*",
+                "template": [
+                    "<<filename>>",
+                    "",
+                    "  Created: Sometime in <<projectCreationYear>>",
+                    "  Modified: <<dateformat('YYYY-MM-DD-hh:mm:ss')>>",
+                    "",
+                    "  Author: <<author>> <<<authoremail>>>",
+					"  Contributors: <<contributor1name>> <<contributor1email>>",
+					"                <<contributor2name>>",
+                    "  ",
+                    "  Copyright © <<yeartoyear(<<projectCreationYear>>, now)>> <<copyrightHolder>>, All Rights Reserved",
+                    "     License: <<spdxid>> (<<licenseurl>>)"
+                ]
+            },
+            {
+                "language": "markdown",
+                "template": [
+                    "authors:",
+					"  - <<initials>>",
+                    "title: <<filename>>",
+                    "lastmod: <<dateformat('YYYY-MM-DD-hh:mm:ss')>>",
+                    "created: <<filecreated('YYYY-MM-DD-hh:mm:ss')>>",
+					"project: DGMJR.IO",
+                    "license: <<spdxid>>",
+                    "keywords:",
+                    "  - [insert here]]",
+                    "tags:",
+                    "  - [insert here]",
+                    "categories:",
+                    "  - [insert here]"
+                ]
+            }
+        ],
+        "psi-header.variables": [
+            [
+                "projectCreationYear",
+                "2016"
+            ],
+			[
+				"contributor1name",
+				"David G. Moore, Jr."
+			],
+			[
+				"contributor1email",
+				"david@dgmjr.io"
+			],
+			[
+				"contributor2name",
+				"CodeGPT (no really, it wrote a lot of this)"
+			]
+        ],
+	}
+}
