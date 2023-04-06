@@ -43,13 +43,12 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
 
         public static void SetValueLookup(this OpenApiParameter parameter, object dynamicValuesSettings)
         {
-
             parameter.EnsureExtensions();
 
             if (!parameter.Extensions.ContainsKey(Constants.X_MS_DYNAMIC_VALUES))
             {
                 parameter.Extensions.Add(Constants.X_MS_DYNAMIC_VALUES,
-                    new DynamicOpenApiExtension(Constants.X_MS_DYNAMIC_VALUES, dynamicValuesSetting));
+                    new DynamicOpenApiExtension(Constants.X_MS_DYNAMIC_VALUES, dynamicValuesSettings));
             }
         }
 

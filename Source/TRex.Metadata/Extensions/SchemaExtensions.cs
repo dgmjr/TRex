@@ -12,8 +12,10 @@
  *      License: MIT (https://opensource.org/licenses/MIT)
  */ 
 
-using Swashbuckle.Swagger;
 using System.Collections.Generic;
+using Microsoft.OpenApi.Interfaces;
+using Microsoft.OpenApi.Models;
+using TRex;
 using TRex.Metadata;
 using TRex.Metadata.Models;
 
@@ -21,74 +23,72 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
 {
     internal static class SchemaExtensions
     {
-        public static void EnsureVendorExtensions(this Schema modelDescription)
+        public static void EnsureVendorExtensions(this OpenApiSchema modelDescription)
         {
-            if (modelDescription.vendorExtensions == null) modelDescription.vendorExtensions = new Dictionary<string, object>();
+            if (modelDescription.Extensions == null) modelDescription.Extensions = new Dictionary<string, IOpenApiExtension>();
         }
 
-        public static void SetSchemaLookup(this Schema modelDescription, DynamicSchemaModel dynamicSchemaSettings)
+        public static void SetSchemaLookup(this OpenApiSchema modelDescription, DynamicSchemaModel dynamicSchemaSettings)
         {
             modelDescription.EnsureVendorExtensions();
 
-            if (!modelDescription.vendorExtensions.ContainsKey(Constants.X_MS_DYNAMIC_SCHEMA))
+            if (!modelDescription.Extensions.ContainsKey(Constants.X_MS_DYNAMIC_SCHEMA))
             {
-                modelDescription.vendorExtensions.Add(Constants.X_MS_DYNAMIC_SCHEMA,
-                    dynamicSchemaSettings);
+                modelDescription.Extensions.Add(Constants.X_MS_DYNAMIC_SCHEMA, dynamicSchemaSettings);
             }
         }
 
-        public static void SetValueLookup(this Schema modelDescription, DynamicValuesModel dynamicValuesSettings)
+        public static void SetValueLookup(this OpenApiSchema modelDescription, DynamicValuesModel dynamicValuesSettings)
         {
 
             modelDescription.EnsureVendorExtensions();
 
-            if (!modelDescription.vendorExtensions.ContainsKey(Constants.X_MS_DYNAMIC_VALUES))
+            if (!modelDescription.Extensions.ContainsKey(Constants.X_MS_DYNAMIC_VALUES))
             {
-                modelDescription.vendorExtensions.Add(Constants.X_MS_DYNAMIC_VALUES,
-                    dynamicValuesSettings);
+                modelDescription.Extensions.Add(Constants.X_MS_DYNAMIC_VALUES, dynamicValuesSettings);
             }
 
         }
 
-        public static void SetCallbackUrl(this Schema modelDescription)
+        public static void SetCallbackUrl(this OpenApiSchema modelDescription)
         {
             modelDescription.EnsureVendorExtensions();
 
-            if (!modelDescription.vendorExtensions.ContainsKey(Constants.X_MS_NOTIFICATION_URL))
+            if (!modelDescription.Extensions.ContainsKey(Constants.X_MS_NOTIFICATION_URL))
             {
-                modelDescription.vendorExtensions.Add(Constants.X_MS_NOTIFICATION_URL,
-                    true.ToString().ToLowerInvariant());
+                modelDescription.Extensions.Add(Constants.X_MS_NOTIFICATION_URL, true.ToString().ToLowerInvariant());
             }
 
             modelDescription.SetVisibility(VisibilityType.Internal);
+            // todo: #3 Find out if this is stil necessary
+            // modelDescription.Type = VisibilityType.Internal;
         }
 
-        public static void SetVisibility(this Schema modelDescription, VisibilityType visibility)
+        public static void SetVisibility(this OpenApiSchema modelDescription, VisibilityType visibility)
         {
             if (visibility == VisibilityType.Default) return;
 
             modelDescription.EnsureVendorExtensions();
 
-            if (!modelDescription.vendorExtensions.ContainsKey(Constants.X_MS_VISIBILITY))
+            if (!modelDescription.Extensions.ContainsKey(Constants.X_MS_VISIBILITY))
             {
-                modelDescription.vendorExtensions
-                    .Add(Constants.X_MS_VISIBILITY,
-                            visibility.ToString().ToLowerInvariant());
+                modelDescription.Extensions
+                    .Add(Constants.X_MS_VISIBILITY,  visibility.ToString().ToLowerInvariant());
             }
         }
 
-        public static void SetFriendlyNameAndDescription(this Schema modelDescription, string friendlyName, string description)
+        public static void SetFriendlyNameAndDescription(this OpenApiSchema modelDescription, string friendlyName, string description)
         {
             if (!string.IsNullOrWhiteSpace(description))
-                modelDescription.description = description;
+                modelDescription.Description = description;
 
             if (string.IsNullOrWhiteSpace(friendlyName)) return;
 
             modelDescription.EnsureVendorExtensions();
 
-            if (!modelDescription.vendorExtensions.ContainsKey(Constants.X_MS_SUMMARY))
+            if (!modelDescription.Extensions.ContainsKey(Constants.X_MS_SUMMARY))
             {
-                modelDescription.vendorExtensions.Add(Constants.X_MS_SUMMARY, friendlyName);
+                modelDescription.Extensions.Add(Constants.X_MS_SUMMARY, friendlyName);
             }
         }
 

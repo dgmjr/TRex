@@ -52,7 +52,8 @@ namespace QuickLearn.ApiApps.Metadata
 
                 applyValueLookupForDynamicProperties(schemaProperty, propertyInfo);
                 applyPropertyMetadata(schemaProperty, propertyInfo);
-                applyCallbackUrl(schemaProperty, propertyInfo);
+                // todo: #7 figure out how to get the callbackurl from these objects
+                // applyCallbackUrl(schemaProperty, propertyInfo);
             }
         }
 
@@ -155,7 +156,7 @@ namespace QuickLearn.ApiApps.Metadata
 
                 /**
                   * I don't know wtf this is supposed to do so I'm'a just comment it out for now
-                /// todo: Figure out what this is supposed to do & fix it
+                /// todo: #6 Figure out what this is supposed to do & fix it
 
                 dynamicSchema.SetSchemaLookup(schemaLookupSettings);
                 dynamicSchema.properties = dynamicSchema.properties ?? new Dictionary<string, Schema>();
@@ -187,13 +188,13 @@ namespace QuickLearn.ApiApps.Metadata
             if (callbackUrlAttribute != null)
             {
                 // I also don't know wtf this is supposed to do so I'm'a just comment it out for now
-                // todo: Figure out what this is supposed to do & fix it
+                // todo: #5 Figure out what this is supposed to do & fix it
                 // schemaProperty.SetCallbackUrl();
             }
 
         }
 
-        private static void applyPropertyMetadata(OpenApiSchems schemaProperty, PropertyInfo propertyInfo)
+        private static void applyPropertyMetadata(OpenApiSchema schemaProperty, PropertyInfo propertyInfo)
         {
 
             // Apply friendly names and descriptions wherever possible
@@ -210,6 +211,11 @@ namespace QuickLearn.ApiApps.Metadata
                 schemaProperty.SetFriendlyNameAndDescription(propertyMetadata.FriendlyName, propertyMetadata.Description);
             }
 
+        }
+
+        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 

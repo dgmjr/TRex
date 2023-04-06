@@ -12,12 +12,12 @@
  *      License: MIT (https://opensource.org/licenses/MIT)
  */ 
 
-using System.Dynamic;
 using System;
-using Newtonsoft.Json.Linq;
-using System.Linq;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace TRex.Metadata
 {
@@ -28,29 +28,15 @@ namespace TRex.Metadata
     /// </summary>
     public class DynamicModelBase : DynamicObject
     {
-        JToken data;
+        private JToken data;
 
         /// <summary>
-        /// Initializes a new instance of the DynamicModelBase class
+        /// Returns an enumerable collection of all dynamic member names.
         /// </summary>
-        public DynamicModelBase()
-        {
-            data = new JObject();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the DynamicModelBase class based on a given object
-        /// </summary>
-        /// <param name="source">Source object to use for the dynamic model</param>
-        public DynamicModelBase(object source)
-        {
-            data = JToken.FromObject(source);
-        }
-
+        /// <returns>An enumerable containing the dynamic member names.</returns>
         public override IEnumerable<string> GetDynamicMemberNames()
         {
             var dObj = (data as JObject);
-
             if (null != dObj)
             {
                 if (dObj.Properties() != null && dObj.Properties().Any())
@@ -62,6 +48,11 @@ namespace TRex.Metadata
             return base.GetDynamicMemberNames();
         }
 
+        /// <summary>
+        /// Provides the implementation of the retrieval of a dynamic member.
+        /// </summary>
+        /// <param name="binder">The binder.</param>
+        /// <param name="result">The dynamic member result.</param>\n    /// <returns>Returns whether the bind operation is successful.</returns>
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             result = null;
@@ -96,6 +87,12 @@ namespace TRex.Metadata
             }
         }
 
+        /// <summary>
+        /// Provides the implementation of the setting of a dynamic member.
+        /// </summary>
+        /// <param name="binder">The binder.</param>
+        /// <param name="value">The dynamic member value.</param>
+        /// <returns>Returns whether the setting operation is successful.</returns>
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
             if (binder == null) return false;
@@ -128,37 +125,60 @@ namespace TRex.Metadata
             }
         }
 
+        /// <summary>
+        /// Returns an enumerable collection of all public member names.
+        /// </summary>
+        /// <returns>An enumerable containing the public member names.</returns>
         private IEnumerable<string> getPublicMemberNames()
         {
             return this.GetType()
-                            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                            .Select(p => p.Name).Union(
-                        this.GetType()
-                            .GetFields(BindingFlags.Instance | BindingFlags.Public)
-                            .Select(p => p.Name)).OrderBy(p => p);
+                                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                .Select(p => p.Name).Union(
+                            this.GetType()
+                                .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                                .Select(p => p.Name)).OrderBy(p => p);
         }
 
-        public static JToken ToJToken(DynamicModelBase source)
-        {
-            return source;
-        }
-
-        public static DynamicModelBase FromJToken(JToken source)
-        {
-            return source;
-        }
-        
+        /// <summary>
+        /// Implicitly casts a DynamicModelBase instance to a JToken instance.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        /// <returns>A JToken instance.</returns>
         public static implicit operator JToken(DynamicModelBase source)
         {
             if (source == null) return null;
             return source.data;
         }
 
+        /// <summary>
+        /// Implicitly casts a JToken instance to a DynamicModelBase instance.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        /// <returns>A DynamicModelBase instance.</returns>
         public static implicit operator DynamicModelBase(JToken source)
         {
             if (source == null) return null;
             return new DynamicModelBase() { data = source };
         }
 
+        /// <summary>
+        /// Explicitly casts a DynamicModelBase instance to a JToken instance.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        /// <returns>A JToken instance.</returns>
+        public static JToken ToJToken(DynamicModelBase source)
+        {
+            return source;
+        }
+
+        /// <summary>
+        /// Explicitly casts a JToken instance to a DynamicModelBase instance.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        /// <returns>A DynamicModelBase instance.</returns>
+        public static DynamicModelBase FromJToken(JToken source)
+        {
+            return source;
+        }
     }
 }

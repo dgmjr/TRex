@@ -52,6 +52,7 @@ namespace QuickLearn.ApiApps.Metadata.Extensions
             return operationId;
         }
 
+        // these are built-in to the new API
         // internal static T GetFirstOrDefaultCustomAttribute<T>(this ActionDescriptor actionDescriptor) where T : Attribute
         // {
         //     if (actionDescriptor == null) return null;

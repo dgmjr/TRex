@@ -1,4 +1,18 @@
-﻿using System;
+﻿/* 
+ * PollingTriggerExtensions.cs
+ * 
+ *   Created: Sometime in 2016
+ *   Modified: 2023-04-03-09:12:02
+ * 
+ *   Author: Nick Hauensteiin <Nicholas.Hauenstein@microsoft.com>
+ *   Contributors: David G. Moore, Jr. david@dgmjr.io
+ *                 CodeGPT (no really, it wrote a lot of this)
+ *   
+ *   Copyright © 2016 - 2023 Nick Hauenstein & David G. Moore, Jr., All Rights Reserved
+ *      License: MIT (https://opensource.org/licenses/MIT)
+ */ 
+
+using System;
 using System.Buffers;
 using System.Net;
 using System.Net.Http;
@@ -32,7 +46,7 @@ namespace TRex.Metadata
         /// <param name="config">Object containing as members the parameters to pass to the polling operation. The names of the properties must exactly match the input parameters.</param>
         /// <returns>Returns an HttpResponseMessage that contains a result that can be used to trigger a Logic App or Flow</returns>
         public static HttpResponseMessage EventTriggered<TConfig, TResult>(this HttpRequest request,
-             TResult result, TimeSpan pollAgain, string triggerRouteName, TConfig config)
+            TResult result, TimeSpan pollAgain, string triggerRouteName, TConfig config)
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK);
 
@@ -54,14 +68,14 @@ namespace TRex.Metadata
         /// <param name="config">Object containing as members the parameters to pass to the polling operation. The names of the properties must exactly match the input parameters.</param>
         /// <returns>Returns an HttpResponseMessage that contains a result that can be used to trigger a Logic App or Flow</returns>
         public static HttpResponseMessage EventTriggered<TConfig, TResult>(this HttpRequest request,
-             TResult result, string triggerRouteName, TConfig config)
+            TResult result, string triggerRouteName, TConfig config)
         {
             // Get an instance of IOptions<MvcNewtonsoftJsonOptions>
             var mvcJsonOptions = request.HttpContext.RequestServices.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>();
             var mvcOptions = request.HttpContext.RequestServices.GetRequiredService<IOptions<MvcOptions>>();
 
             // Create a NewtonsoftJsonOutputFormatter using the Newtonsoft.Json.JsonSerializer
-            var formatter = new NewtonsoftJsonOutputFormatter(mvcJsonOptions.Value.SerializerSettings, ArrayPool<char>.Shared, mvcOptions.Value);
+            var formatter = new NewtonsoftJsonOutputFormatter(mvcJsonOptions.Value.SerializerSettings, ArrayPool<char>.Shared, mvcOptions.Value, mvcJsonOptions?.Value);
 
             var newtonsoftJsonMediaTypeFormatter = new NewtonsoftJsonMediaTypeFormatter();
 
